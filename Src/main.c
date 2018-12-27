@@ -140,7 +140,7 @@ int main(void)
 	}	
 	/* ADC Start Calibration in interrupt mode */
 	if(HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK){
-		Error_Handler();
+		Error_Handler(); //git
 	}
   /* USER CODE END 2 */
 
