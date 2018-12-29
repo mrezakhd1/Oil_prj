@@ -53,7 +53,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+static void Calibration_process(void);
+static void Rotation_degree(uint8_t rotate);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -71,7 +72,9 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 __IO uint32_t InjectedConvData_SDADC1[512];
-__IO float max_Value = 0;
+__IO float SDADC_Value = 0;
+uint16_t Position_Dir = 0;
+int Pt_value = 0;
 char buffer_adc[128];
 /* USER CODE END PV */
 
@@ -138,25 +141,42 @@ int main(void)
 		/* An error occurs duringthe configuration of the injected conversion in interrupt mode */
 		Error_Handler();
 	}	
-	/* ADC Start Calibration in interrupt mode */
+	/* ADC start calibration in interrupt mode */
 	if(HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK){
-		Error_Handler(); //git
+		Error_Handler();
 	}
+	/* Start the first system calibration by Feedback signal */
+	Calibration_process();
+	/* Start interrupt mode */
+	if(HAL_ADC_Start_IT(&hadc1) != HAL_OK){
+		Error_Handler();
+	}	
   /* USER CODE END 2 */
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-		float adc_read = max_Value;
-		float tmpVal = (adc_read < 0) ? -adc_read : adc_read;
-		int tmpInt1 = tmpVal;                  // Get the integer
-		sprintf(buffer_adc, "SDADC = %d \r\n", tmpInt1);
-		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 15, HAL_MAX_DELAY);		
-		HAL_Delay(500);
+    /* USER CODE BEGIN 3 */	
+//		HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_SET);
+//		for(int j = 0; j < 25; j++){
+//			HAL_ADC_Start(&hadc1);
+//			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//			Pt_value += HAL_ADC_GetValue(&hadc1);			
+//		}
+//		Pt_value /= 25;
+//		sprintf(buffer_adc, "%d. \r\n", (int)Pt_value);		
+//		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 7, HAL_MAX_DELAY);
+//		HAL_Delay(3);
+//		HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_RESET);
+//		HAL_Delay(300);		
+		SDADC_Value = (SDADC_Value < 0) ? -SDADC_Value : SDADC_Value;
+		Position_Dir = ((SDADC_Value - SDADC_Regulation) * 100) / SDADC_Regulation;
+		Rotation_degree(Degree_tbl[Position_Dir * 5]);
+//		sprintf(buffer_adc, "SDADC = %d \r\n", (int)Position_Dir);
+//		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 15, HAL_MAX_DELAY);
+//		HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
@@ -418,26 +438,65 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void DMA2_Channel4_IRQHandler(void)
 {
-	uint16_t i_C = 0;
-	int16_t tempConv = 0;
-	int16_t temp;
+	int16_t tmpCnv = 0, tmpVal = 0;
 	HAL_DMA_IRQHandler(&hdma_sdadc2);
 	HAL_SDADC_InjectedStop_DMA(&hsdadc2);
-	tempConv = (int16_t)InjectedConvData_SDADC1[i_C];
-	temp = (  ( ((tempConv ) * SDADC_VREF) ) / (SDADC_GAIN * 32767)   );
-	//temp = (  ( ((tempConv ) * SDADC_VREF)+32767 ) / (SDADC_GAIN * 65535)   ); worked but there was a better way 
-	max_Value =temp;
-	for(i_C=1;i_C<500;i_C++){
-		tempConv = (int16_t)InjectedConvData_SDADC1[i_C];
-		temp = (  ( ((tempConv ) * SDADC_VREF) ) / (SDADC_GAIN * 32767)   );
-		if(temp > max_Value)max_Value = temp;
+	tmpCnv = (int16_t)InjectedConvData_SDADC1[0];
+	tmpVal = ((((tmpCnv) * SDADC_VREF)) / (SDADC_GAIN * 32767));
+	SDADC_Value = tmpVal;
+	for(int i = 0; i < 512; i++){
+		tmpCnv = (int16_t)InjectedConvData_SDADC1[i];
+		tmpVal = ((((tmpCnv) * SDADC_VREF)) / (SDADC_GAIN * 32767));
+		if(tmpVal > SDADC_Value)
+			SDADC_Value = tmpVal;
 	}
-	//Position = max_Value;
-		if(HAL_SDADC_InjectedStart_DMA(&hsdadc2, (uint32_t *)InjectedConvData_SDADC1, 1000) != HAL_OK){
-		/* An error occurs duringthe configuration of the injected conversion in interrupt mode */
+//	sprintf(buffer_adc, "SDADC value is: %d \r\n", (int)SDADC_Value);
+//	HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 25, HAL_MAX_DELAY);	
+	if(HAL_SDADC_InjectedStart_DMA(&hsdadc2, (uint32_t *)InjectedConvData_SDADC1, 1024) != HAL_OK){
+	/* An error occurs duringthe configuration of the injected conversion in interrupt mode */
 		Error_Handler();
 	}
 }
+
+static void Calibration_process(void){
+		for(int i = 0; i < 25; i++){
+			HAL_ADC_Start(&hadc1);
+			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+			Pt_value += HAL_ADC_GetValue(&hadc1);
+		}
+		Pt_value /= 25;
+		while(Pt_value > 215 ){			
+				HAL_ADC_Start(&hadc1);					
+				HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+				Pt_value = HAL_ADC_GetValue(&hadc1);
+				HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_SET);
+		}				
+		HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_RESET);
+		sprintf(buffer_adc, "Calibration fixed by: %d \r\n", Pt_value);
+		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 27, HAL_MAX_DELAY);			
+}
+
+static void Rotation_degree(uint8_t rotate){
+	if(rotate > Pt_value){
+		while(Pt_value < rotate ){
+			HAL_ADC_Start(&hadc1);					
+			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+			Pt_value = HAL_ADC_GetValue(&hadc1);			
+			HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_SET);
+		}
+	}
+	else {
+		while(Pt_value > rotate ){	
+			HAL_ADC_Start(&hadc1);					
+			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+			Pt_value = HAL_ADC_GetValue(&hadc1);			
+			HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_SET);
+		}		
+	}
+	HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_RESET);
+}
+
 /* USER CODE END 4 */
 
 /**
