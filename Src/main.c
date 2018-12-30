@@ -54,12 +54,35 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 static void Calibration_process(void);
-static void Rotation_degree(uint8_t rotate);
+static void Rotation_degree(uint16_t rotate);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+const int Degree_tbl[500] = {
+	215, 131, 215, 164, 215, 171, 200, 215, 225, 235, 257, 238, 245, 250, 266, 265, 264, 294, 295, 313, 329, 333, 330, 333, 352, 
+	368, 367, 387, 389, 403, 396, 430, 442, 456, 442, 440, 476, 470, 487, 504, 504, 516, 523, 526, 533, 569, 544, 577, 584, 590, 
+	587, 606, 607, 611, 616, 622, 631, 648, 653, 648, 653, 667, 667, 677, 688, 689, 700, 705, 707, 722, 726, 727, 730, 734, 738, 
+	750, 756, 752, 753, 762, 771, 777, 789, 792, 804, 802, 803, 815, 817, 816, 817, 824, 836, 838, 844, 858, 860, 852, 875, 888, 
+	899, 898, 899, 909, 909, 913, 926, 934, 934, 952, 956, 952, 964, 975, 982, 975, 979, 992, 999, 1000, 1018, 1017, 1018, 1027, 
+	1038, 1036, 1041, 1052, 1054, 1066, 1067, 1071, 1070, 1073, 1074, 1089, 1098, 1114, 1119, 1129, 1132, 1140, 1148, 1153, 1156, 
+	1157, 1166, 1177, 1184, 1183, 1198, 1200, 1218, 1222, 1224, 1231, 1234, 1246, 1251, 1258, 1275, 1279, 1282, 1292, 1296, 1306, 
+	1309, 1318, 1329, 1333, 1333, 1334, 1354, 1362, 1371, 1375, 1382, 1387, 1395, 1404, 1415, 1425, 1424, 1431, 1434, 1446, 1451, 
+	1458, 1464, 1478, 1477, 1479, 1493, 1500, 1501, 1512, 1522, 1526, 1532, 1537, 1547, 1551, 1560, 1562, 1566, 1573, 1584, 1584, 
+	1593, 1599, 1605, 1606, 1613, 1619, 1622, 1628, 1638, 1641, 1656, 1660, 1669, 1671, 1682, 1684, 1691, 1695, 1698, 1709, 1714, 
+	1717, 1729, 1730, 1735, 1739, 1751, 1759, 1762, 1771, 1779, 1780, 1792, 1798, 1795, 1803, 1808, 1814, 1816, 1828, 1835, 1839, 
+	1847, 1855, 1860, 1863, 1872, 1876, 1887, 1888, 1895, 1900, 1906, 1912, 1915, 1929, 1932, 1935, 1942, 1946, 1954, 1961, 1967, 
+	1970, 1972, 1983, 1989, 1996, 1996, 2006, 2011, 2017, 2024, 2031, 2033, 2040, 2048, 2054, 2058, 2067, 2070, 2072, 2077, 2089, 
+	2097, 2101, 2107, 2114, 2117, 2121, 2103, 2099, 2105, 2097, 2099, 2102, 2110, 2118, 2121, 2126, 2133, 2143, 2146, 2155, 2159, 
+	2164, 2160, 2160, 2162, 2152, 2141, 2148, 2154, 2161, 2167, 2171, 2179, 2187, 2192, 2192, 2204, 2207, 2209, 2211, 2222, 2227, 
+	2232, 2236, 2244, 2256, 2262, 2269, 2272, 2278, 2286, 2294, 2297, 2302, 2309, 2314, 2320, 2328, 2333, 2336, 2341, 2348, 2354, 
+	2361, 2368, 2372, 2376, 2384, 2387, 2392, 2399, 2402, 2411, 2416, 2422, 2426, 2432, 2439, 2441, 2448, 2457, 2459, 2465, 2469, 
+	2474, 2482, 2488, 2497, 2500, 2506, 2514, 2520, 2527, 2532, 2534, 2540, 2548, 2551, 2556, 2566, 2570, 2574, 2581, 2589, 2592, 
+	2597, 2602, 2610, 2614, 2625, 2625, 2632, 2637, 2642, 2649, 2660, 2665, 2667, 2675, 2681, 2681, 2692, 2698, 2705, 2708, 2709, 
+	2723, 2729, 2732, 2737, 2744, 2754, 2761, 2766, 2769, 2782, 2785, 2793, 2801, 2805, 2810, 2817, 2826, 2831, 2837, 2844, 2855, 
+	2865, 2867, 2871, 2881, 2888, 2889, 2897, 2906, 2910, 2912, 2925, 2931, 2940, 2943, 2954, 2956, 2965, 2973, 2981, 2986, 2990, 
+	2994, 3003, 3018, 3029, 3028, 3037, 3043, 3057, 3057, 3060, 3072, 3078, 3079, 3085, 3086, 3108, 3113, 3117, 3119, 3125, 3134, 
+	3141, 3146, 3151, 3161, 3166, 3171, 3172, 3173, 3175, 3176, 3177, 3179, 3183, 3185, 3190, 3193, 3199, 3200 };
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -74,6 +97,8 @@ UART_HandleTypeDef huart2;
 __IO uint32_t InjectedConvData_SDADC1[512];
 __IO float SDADC_Value = 0;
 uint16_t Position_Dir = 0;
+uint16_t Avg_degree;
+uint16_t Pre_deg = 0, Now_deg = 0;
 int Pt_value = 0;
 char buffer_adc[128];
 /* USER CODE END PV */
@@ -146,11 +171,7 @@ int main(void)
 		Error_Handler();
 	}
 	/* Start the first system calibration by Feedback signal */
-	Calibration_process();
-	/* Start interrupt mode */
-	if(HAL_ADC_Start_IT(&hadc1) != HAL_OK){
-		Error_Handler();
-	}	
+	//Calibration_process();
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -159,21 +180,32 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */	
-//		HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_SET);
-//		for(int j = 0; j < 25; j++){
-//			HAL_ADC_Start(&hadc1);
-//			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-//			Pt_value += HAL_ADC_GetValue(&hadc1);			
-//		}
-//		Pt_value /= 25;
-//		sprintf(buffer_adc, "%d. \r\n", (int)Pt_value);		
-//		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 7, HAL_MAX_DELAY);
-//		HAL_Delay(3);
-//		HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_RESET);
-//		HAL_Delay(300);		
-		SDADC_Value = (SDADC_Value < 0) ? -SDADC_Value : SDADC_Value;
-		Position_Dir = ((SDADC_Value - SDADC_Regulation) * 100) / SDADC_Regulation;
-		Rotation_degree(Degree_tbl[Position_Dir * 5]);
+/*		HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_SET);
+		for(int j = 0; j < 25; j++){
+			HAL_ADC_Start(&hadc1);
+			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+			Pt_value += HAL_ADC_GetValue(&hadc1);			
+		}
+		Pt_value /= 25;
+		sprintf(buffer_adc, "%d. \r\n", (int)Pt_value);		
+		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 7, HAL_MAX_DELAY);
+		HAL_Delay(3);
+		HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_RESET);
+		HAL_Delay(300); */
+		
+/*		SDADC_Value = (SDADC_Value < 0) ? -SDADC_Value : SDADC_Value;
+			Position_Dir = ((SDADC_Value - SDADC_Regulation) * 100) / SDADC_Regulation;
+			if(Position_Dir > 99)
+				Position_Dir = 99;
+			Avg_degree = (Degree_tbl[(Position_Dir * 5)] + Degree_tbl[(Position_Dir * 5)+ 1] + Degree_tbl[(Position_Dir * 5)+ 2] + Degree_tbl[(Position_Dir * 5)+ 3] + Degree_tbl[(Position_Dir * 5)+ 4]) / 5;
+			if((Avg_degree < 3200) && (Avg_degree > 150)){
+				Rotation_degree(Avg_degree);
+			}*/
+
+			SDADC_Value = (SDADC_Value < 0) ? -SDADC_Value : SDADC_Value;
+			sprintf(buffer_adc, "SDADC value is: %d \r\n", (int)SDADC_Value);
+			HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 23, HAL_MAX_DELAY);
+			HAL_Delay(250);
 //		sprintf(buffer_adc, "SDADC = %d \r\n", (int)Position_Dir);
 //		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 15, HAL_MAX_DELAY);
 //		HAL_Delay(500);
@@ -450,10 +482,10 @@ void DMA2_Channel4_IRQHandler(void)
 		if(tmpVal > SDADC_Value)
 			SDADC_Value = tmpVal;
 	}
-//	sprintf(buffer_adc, "SDADC value is: %d \r\n", (int)SDADC_Value);
-//	HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 25, HAL_MAX_DELAY);	
+	//sprintf(buffer_adc, "SDADC value is: %d \r\n", (int)SDADC_Value);
+	//HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 25, HAL_MAX_DELAY);
+	//HAL_Delay(250);
 	if(HAL_SDADC_InjectedStart_DMA(&hsdadc2, (uint32_t *)InjectedConvData_SDADC1, 1024) != HAL_OK){
-	/* An error occurs duringthe configuration of the injected conversion in interrupt mode */
 		Error_Handler();
 	}
 }
@@ -472,29 +504,32 @@ static void Calibration_process(void){
 				HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_SET);
 		}				
 		HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_RESET);
-		sprintf(buffer_adc, "Calibration fixed by: %d \r\n", Pt_value);
-		HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 27, HAL_MAX_DELAY);			
+		//sprintf(buffer_adc, "Calibration fixed by: %d \r\n", Pt_value);
+		//HAL_UART_Transmit(&huart2, (uint8_t *)buffer_adc, 27, HAL_MAX_DELAY);			
 }
 
-static void Rotation_degree(uint8_t rotate){
+static void Rotation_degree(uint16_t rotate){
+	static int Pt_value = 0;
 	if(rotate > Pt_value){
 		while(Pt_value < rotate ){
 			HAL_ADC_Start(&hadc1);					
 			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 			Pt_value = HAL_ADC_GetValue(&hadc1);			
-			HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_SET);
 		}
+		HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_RESET);
+		return;
 	}
-	else {
+	if(rotate < Pt_value){
 		while(Pt_value > rotate ){	
 			HAL_ADC_Start(&hadc1);					
 			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 			Pt_value = HAL_ADC_GetValue(&hadc1);			
-			HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_SET);
-		}		
+			HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_SET);
+		}
+		HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_RESET);
+		return;
 	}
-	HAL_GPIO_WritePin(GPIOA, MTR_L_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, MTR_R_Pin, GPIO_PIN_RESET);
 }
 
 /* USER CODE END 4 */
