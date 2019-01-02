@@ -202,8 +202,8 @@ void HAL_SDADC_MspInit(SDADC_HandleTypeDef* hsdadc)
     hdma_sdadc2.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_sdadc2.Init.PeriphInc = DMA_PINC_DISABLE;
     hdma_sdadc2.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_sdadc2.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-    hdma_sdadc2.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    hdma_sdadc2.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_sdadc2.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
     hdma_sdadc2.Init.Mode = DMA_CIRCULAR;
     hdma_sdadc2.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_sdadc2) != HAL_OK)
@@ -213,6 +213,9 @@ void HAL_SDADC_MspInit(SDADC_HandleTypeDef* hsdadc)
 
     __HAL_LINKDMA(hsdadc,hdma,hdma_sdadc2);
 
+    /* SDADC2 interrupt Init */
+    HAL_NVIC_SetPriority(SDADC2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(SDADC2_IRQn);
   /* USER CODE BEGIN SDADC2_MspInit 1 */
 
   /* USER CODE END SDADC2_MspInit 1 */
@@ -245,6 +248,9 @@ void HAL_SDADC_MspDeInit(SDADC_HandleTypeDef* hsdadc)
 
     /* SDADC2 DMA DeInit */
     HAL_DMA_DeInit(hsdadc->hdma);
+
+    /* SDADC2 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(SDADC2_IRQn);
   /* USER CODE BEGIN SDADC2_MspDeInit 1 */
 
   /* USER CODE END SDADC2_MspDeInit 1 */
