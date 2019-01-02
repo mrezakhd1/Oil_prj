@@ -73,6 +73,7 @@
 /* External variables --------------------------------------------------------*/
 extern ADC_HandleTypeDef hadc1;
 extern DMA_HandleTypeDef hdma_sdadc2;
+extern SDADC_HandleTypeDef hsdadc2;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -254,6 +255,20 @@ void DMA2_Channel3_IRQHandler(void)
 
 //  /* USER CODE END DMA2_Channel4_IRQn 1 */
 //}
+
+/**
+  * @brief This function handles SDADC2 global interrupt.
+  */
+void SDADC2_IRQHandler(void)
+{
+  /* USER CODE BEGIN SDADC2_IRQn 0 */
+
+  /* USER CODE END SDADC2_IRQn 0 */
+  HAL_SDADC_IRQHandler(&hsdadc2);
+  /* USER CODE BEGIN SDADC2_IRQn 1 */
+
+  /* USER CODE END SDADC2_IRQn 1 */
+}
 
 /* USER CODE BEGIN 1 */
 
